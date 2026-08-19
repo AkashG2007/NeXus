@@ -1,45 +1,120 @@
 "use client";
 
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, ReferenceLine
+} from 'recharts';
 
-export default function MetricsCharts({ data }: { data: any[] }) {
-  if (data.length === 0) {
-    return <div className="flex h-full items-center justify-center text-gray-500">No telemetry data...</div>;
+interface MetricsChartsProps {
+  data: any[];
+}
+
+const TOOLTIP_STYLE = {
+  backgroundColor: '#0E1522',
+  border: '1px solid rgba(100,116,139,0.3)',
+  borderRadius: 3,
+  padding: '8px 12px',
+  fontFamily: 'JetBrains Mono, monospace',
+  fontSize: 10,
+};
+
+const TICK_STYLE = {
+  fontFamily: 'JetBrains Mono, monospace',
+  fontSize: 9,
+  fill: 'rgba(148,163,184,0.5)',
+};
+
+// Generates simple demo seed data if empty
+function getSeedData() {
+  const seed: any[] = [];
+  for (let i = 0; i < 30; i++) {
+    seed.push({
+      time: i * 2,
+      avgSpeed: 72 + Math.sin(i * 0.4) * 8,
+      density: 48 + Math.cos(i * 0.3) * 10,
+      flow: 0,
+      cvcc_active: 0,
+    });
   }
+  return seed;
+}
+
+export default function MetricsCharts({ data }: MetricsChartsProps) {
+  const chartData = data.length > 0 ? data : getSeedData();
 
   return (
-    <div className="h-full flex flex-col gap-4">
-      <div className="flex-1 min-h-[150px]">
-        <h4 className="text-sm text-gray-400 mb-2 font-semibold tracking-wide">Average Highway Speed (km/h)</h4>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-            <XAxis dataKey="time" type="number" domain={['dataMin', 'dataMax']} tickFormatter={(tick) => typeof tick === 'number' ? tick.toFixed(1) : String(tick ?? '')} stroke="#9ca3af" />
-            <YAxis domain={[0, 120]} stroke="#9ca3af" />
-            <Tooltip 
-              contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px' }}
-              labelFormatter={(val) => `Time: ${typeof val === 'number' ? val.toFixed(1) : String(val ?? '')}s`}
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* Speed Chart */}
+      <div style={{ flex: 1, minHeight: 90 }}>
+        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 9, letterSpacing: '0.15em', color: 'rgba(148,163,184,0.5)', textTransform: 'uppercase', marginBottom: 4 }}>
+          AVG SPEED · KM/H
+        </div>
+        <ResponsiveContainer width="100%" height="80%">
+          <LineChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+            <CartesianGrid strokeDasharray="2 4" stroke="rgba(100,116,139,0.1)" />
+            <XAxis
+              dataKey="time"
+              type="number"
+              domain={['dataMin', 'dataMax']}
+              tickFormatter={v => typeof v === 'number' ? v.toFixed(0) : ''}
+              tick={TICK_STYLE}
+              axisLine={false}
+              tickLine={false}
             />
-            <ReferenceLine y={108} stroke="#22c55e" strokeDasharray="3 3" label={{ value: 'Target', fill: '#22c55e', position: 'insideTopLeft' }} />
-            <Line type="monotone" dataKey="avgSpeed" stroke="#60a5fa" strokeWidth={2} dot={false} isAnimationActive={false} />
+            <YAxis domain={[0, 120]} tick={TICK_STYLE} axisLine={false} tickLine={false} />
+            <Tooltip
+              contentStyle={TOOLTIP_STYLE}
+              labelFormatter={v => `t=${typeof v === 'number' ? v.toFixed(1) : v}s`}
+              formatter={(v: any) => [`${Number(v).toFixed(1)} km/h`, 'Speed']}
+              itemStyle={{ color: '#64FFDA', fontFamily: 'JetBrains Mono,monospace', fontSize: 10 }}
+            />
+            <ReferenceLine y={90} stroke="rgba(16,185,129,0.4)" strokeDasharray="3 3" />
+            <Line
+              type="monotone"
+              dataKey="avgSpeed"
+              stroke="#64FFDA"
+              strokeWidth={1.5}
+              dot={false}
+              isAnimationActive={false}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="flex-1 min-h-[150px]">
-        <h4 className="text-sm text-gray-400 mb-2 font-semibold tracking-wide">Maximum Segment Density (veh/km)</h4>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-            <XAxis dataKey="time" type="number" domain={['dataMin', 'dataMax']} tickFormatter={(tick) => typeof tick === 'number' ? tick.toFixed(1) : String(tick ?? '')} stroke="#9ca3af" />
-            <YAxis domain={[0, 100]} stroke="#9ca3af" />
-            <Tooltip 
-              contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px' }}
-              labelFormatter={(val) => `Time: ${typeof val === 'number' ? val.toFixed(1) : String(val ?? '')}s`}
+      {/* Density Chart */}
+      <div style={{ flex: 1, minHeight: 90 }}>
+        <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 9, letterSpacing: '0.15em', color: 'rgba(148,163,184,0.5)', textTransform: 'uppercase', marginBottom: 4 }}>
+          DENSITY · VEH/KM
+        </div>
+        <ResponsiveContainer width="100%" height="80%">
+          <LineChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+            <CartesianGrid strokeDasharray="2 4" stroke="rgba(100,116,139,0.1)" />
+            <XAxis
+              dataKey="time"
+              type="number"
+              domain={['dataMin', 'dataMax']}
+              tickFormatter={v => typeof v === 'number' ? v.toFixed(0) : ''}
+              tick={TICK_STYLE}
+              axisLine={false}
+              tickLine={false}
             />
-            <ReferenceLine y={40} stroke="#ef4444" strokeDasharray="3 3" label={{ value: 'Jam Threshold', fill: '#ef4444', position: 'insideTopLeft' }} />
-            <Line type="monotone" dataKey="density" stroke="#f472b6" strokeWidth={2} dot={false} isAnimationActive={false} />
+            <YAxis domain={[0, 120]} tick={TICK_STYLE} axisLine={false} tickLine={false} />
+            <Tooltip
+              contentStyle={TOOLTIP_STYLE}
+              labelFormatter={v => `t=${typeof v === 'number' ? v.toFixed(1) : v}s`}
+              formatter={(v: any) => [`${Number(v).toFixed(1)} veh/km`, 'Density']}
+              itemStyle={{ color: '#F59E0B', fontFamily: 'JetBrains Mono,monospace', fontSize: 10 }}
+            />
+            <ReferenceLine y={60} stroke="rgba(239,68,68,0.4)" strokeDasharray="3 3" />
+            <Line
+              type="monotone"
+              dataKey="density"
+              stroke="#F59E0B"
+              strokeWidth={1.5}
+              dot={false}
+              isAnimationActive={false}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
